@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pinehurst Shamble</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F5F6F1;
+  --surface:#FFFFFF;
+  --ink:#1B2620;
+  --muted:#5E6B63;
+  --line:#DCE0D6;
+  --pine:#1E3A2B;
+  --pine-ink:#F5F6F1;
+  --sand:#D8C79E;
+  --sand-soft:#F1EADA;
+  --flag:#B3261E;
+  --best:#1E3A2B;
+  --best-ink:#FFFFFF;
+  --t-dente:#1E3A2B;
+  --t-kraft:#23466E;
+  --t-flores:#7A2335;
+  --t-fuentes:#8A6516;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#121915; --surface:#1A231E; --ink:#E7EBE4; --muted:#9AA79F; --line:#2C3830;
+    --pine:#2F5A43; --pine-ink:#F0F3EE; --sand:#B9A77A; --sand-soft:#2A2A20;
+    --flag:#E2665C; --best:#C9B37E; --best-ink:#141A16;
+    --t-dente:#6FAE88; --t-kraft:#7FA6D6; --t-flores:#D98394; --t-fuentes:#D9AE55;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#121915; --surface:#1A231E; --ink:#E7EBE4; --muted:#9AA79F; --line:#2C3830;
+  --pine:#2F5A43; --pine-ink:#F0F3EE; --sand:#B9A77A; --sand-soft:#2A2A20;
+  --flag:#E2665C; --best:#C9B37E; --best-ink:#141A16;
+  --t-dente:#6FAE88; --t-kraft:#7FA6D6; --t-flores:#D98394; --t-fuentes:#D9AE55;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--pine)}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--flag);outline-offset:2px}
+
+header{background:var(--pine);color:var(--pine-ink);padding:20px 18px 0;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.title{font-family:'Libre Caslon Text',Georgia,serif;font-weight:700;font-size:26px;letter-spacing:-.01em;line-height:1.1}
+.title small{display:block;font-family:'IBM Plex Sans',sans-serif;font-weight:400;font-size:13px;opacity:.75;margin-top:4px;letter-spacing:0}
+.courses{display:flex;gap:4px;margin-top:16px}
+.course-btn{flex:1;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--pine-ink);opacity:.65;padding:10px 4px 9px;cursor:pointer;font-family:'Libre Caslon Text',Georgia,serif;font-size:17px}
+.course-btn[aria-pressed="true"]{opacity:1;border-bottom-color:var(--sand)}
+.course-btn span{display:block;font-family:'IBM Plex Sans',sans-serif;font-size:11px;opacity:.8}
+
+nav.views{display:flex;gap:6px;padding:12px 16px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--line)}
+.view-btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.view-btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+main{max-width:760px;margin:0 auto;padding:18px 16px 40px}
+h2{font-family:'Libre Caslon Text',Georgia,serif;font-size:21px;font-weight:700;margin-bottom:4px}
+.lede{color:var(--muted);font-size:14px;margin-bottom:16px;max-width:60ch}
+
+/* Leaderboard: manual scoreboard */
+.board{background:var(--surface);border:2px solid var(--ink);border-radius:4px;overflow:hidden}
+.board-row{display:grid;grid-template-columns:44px 1fr 58px 50px 58px;align-items:center;border-top:1px solid var(--line)}
+.board-row:first-child{border-top:0}
+.board-head{background:var(--ink);color:var(--bg);font-size:12px;font-weight:600}
+.board-head > div{padding:8px 6px;text-align:center}
+.board-head > div:nth-child(2){text-align:left}
+.pos{font-family:'Libre Caslon Text',Georgia,serif;font-size:20px;font-weight:700;text-align:center}
+.team-cell{padding:12px 6px;display:flex;align-items:center;gap:10px;min-width:0}
+.swatch{width:6px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.team-name{font-weight:600;font-size:16px}
+.thru{font-size:12px;color:var(--muted)}
+.tile{margin:6px 4px;background:var(--sand-soft);border:1px solid var(--line);border-radius:3px;text-align:center;padding:7px 0;font-weight:600;font-size:16px}
+.tile.net{background:var(--pine);color:var(--pine-ink);border-color:var(--pine);font-family:'Libre Caslon Text',Georgia,serif;font-size:20px;font-weight:700}
+.tile.empty{color:var(--muted);font-weight:400}
+.board-note{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* Totals across rounds */
+.totals{margin-top:26px}
+table{border-collapse:collapse;width:100%}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.tbl th,.tbl td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
+.tbl th{font-size:12px;color:var(--muted);font-weight:600;background:var(--bg)}
+.tbl td:first-child,.tbl th:first-child{text-align:left}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .strong{font-weight:700}
+
+/* Score entry */
+.team-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.team-pick button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:9px 4px;font-weight:600;font-size:14px;cursor:pointer;border-top:4px solid var(--tc)}
+.team-pick button[aria-pressed="true"]{background:var(--tc);color:#fff;border-color:var(--tc)}
+:root[data-theme="dark"] .team-pick button[aria-pressed="true"]{color:#141A16}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .team-pick button[aria-pressed="true"]{color:#141A16}}
+
+.hole-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.hole-num{font-family:'Libre Caslon Text',Georgia,serif;font-size:30px;font-weight:700;line-height:1}
+.hole-num small{display:block;font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;color:var(--muted);margin-top:4px}
+.arrow{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:20px;cursor:pointer}
+.arrow:disabled{opacity:.35;cursor:default}
+.holes-strip{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:16px}
+.hs{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:5px 0;font-size:12px;font-weight:600;cursor:pointer;text-align:center}
+.hs.done{background:var(--sand-soft);border-color:var(--sand)}
+.hs[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.players{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.prow{display:grid;grid-template-columns:1fr auto;align-items:center;padding:10px 12px;border-top:1px solid var(--line);gap:8px}
+.prow:first-child{border-top:0}
+.pname{font-weight:600}
+.pmeta{font-size:12px;color:var(--muted)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg);font-size:20px;cursor:pointer;line-height:1}
+.score{width:44px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;border:2px solid var(--line);background:var(--bg)}
+.score.is-best{background:var(--best);color:var(--best-ink);border-color:var(--best)}
+.score.blank{color:var(--muted);font-weight:400}
+.hole-total{display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--sand-soft);border-top:1px solid var(--line);border-radius:0 0 8px 8px;font-weight:600}
+.hole-total strong{font-size:22px;font-family:'Libre Caslon Text',Georgia,serif}
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+.clear-btn{margin-top:12px;border:1px solid var(--line);background:transparent;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+
+/* Scorecard grid */
+.card .tbl th,.card .tbl td{padding:7px 6px;font-size:13px;min-width:30px}
+.card td.b{background:var(--best);color:var(--best-ink);font-weight:700}
+.card tr.sum td{font-weight:700;background:var(--sand-soft)}
+.card td.out{border-left:2px solid var(--line)}
+.card-team{margin-bottom:22px}
+.card-team h3{font-size:16px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card-team h3 i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.card-foot{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* Handicaps */
+.hcp-team{margin-bottom:22px}
+.hcp-team h3{font-size:16px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.hcp-team h3 i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.tbl tr.allow td{background:var(--pine);color:var(--pine-ink);font-weight:700}
+.rules{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--sand);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:14px}
+.rules p+p{margin-top:6px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: no-preference){.score{transition:background .15s,color .15s}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">Pinehurst Shamble<small>Four teams of five. Best 3 gross scores per hole, net of 3/5 team handicap.</small></div>
+  <div class="courses" role="group" aria-label="Course">
+    <button class="course-btn" data-c="0" aria-pressed="true">No. 2<span>Round 1</span></button>
+    <button class="course-btn" data-c="1" aria-pressed="false">No. 4<span>Round 2</span></button>
+    <button class="course-btn" data-c="2" aria-pressed="false">No. 10<span>Round 3</span></button>
+  </div>
+</header>
+<nav class="views" role="group" aria-label="View">
+  <button class="view-btn" data-v="board" aria-pressed="true">Leaderboard</button>
+  <button class="view-btn" data-v="enter" aria-pressed="false">Enter scores</button>
+  <button class="view-btn" data-v="card" aria-pressed="false">Scorecards</button>
+  <button class="view-btn" data-v="hcp" aria-pressed="false">Handicaps</button>
+</nav>
+<main>
+  <section id="v-board"></section>
+  <section id="v-enter" hidden></section>
+  <section id="v-card" hidden></section>
+  <section id="v-hcp" hidden></section>
+</main>
+
+<script>
+const COURSES = ["No. 2","No. 4","No. 10"];
+// Course handicaps per course [No.2, No.4, No.10]; plus handicaps entered as negatives
+const TEAMS = [
+  {id:"dente", name:"Dente", color:"--t-dente", players:[
+    {n:"Joe Dente",    tee:"Blue",       ch:[26,23,27]},
+    {n:"Dwayne Hobbs", tee:"Blue/White", ch:[21,18,22]},
+    {n:"Fred Port",    tee:"Blue",       ch:[16,13,16]},
+    {n:"Ron Pegg",     tee:"Blue/White", ch:[27,24,27]},
+    {n:"Tony Schmits", tee:"Blue",       ch:[22,19,23]},
+  ]},
+  {id:"kraft", name:"Kraft", color:"--t-kraft", players:[
+    {n:"Kevin Kraft",     tee:"Blue", ch:[11,9,11]},
+    {n:"Pete Lynch",      tee:"Blue", ch:[10,8,11]},
+    {n:"Jacob Westfall",  tee:"Blue", ch:[10,8,11]},
+    {n:"Kevin Rowland",   tee:"Blue", ch:[16,14,17]},
+    {n:"Danny Nungesser", tee:"Blue", ch:[-1,-2,0]},
+  ]},
+  {id:"flores", name:"Flores", color:"--t-flores", players:[
+    {n:"James Flores", tee:"Blue", ch:[1,0,2]},
+    {n:"Josh Embry",   tee:"Blue", ch:[14,12,15]},
+    {n:"Chris Noah",   tee:"Blue", ch:[7,5,8]},
+    {n:"Tommy Lawson", tee:"Blue", ch:[10,8,11]},
+    {n:"Kyle Ryan",    tee:"Blue", ch:[18,15,18]},
+  ]},
+  {id:"fuentes", name:"Fuentes", color:"--t-fuentes", players:[
+    {n:"Tony Fuentes",   tee:"Blue", ch:[2,0,2]},
+    {n:"Charles Miller", tee:"Blue", ch:[16,14,17]},
+    {n:"Jeff Kumro",     tee:"Blue", ch:[21,18,22]},
+    {n:"Kelly Shannon",  tee:"Blue", ch:[9,7,9]},
+    {n:"Chris Roberts",  tee:"Blue", ch:[25,22,26]},
+  ]},
+];
+
+// Rounding: .5 and above rounds up (works for plus handicaps too: -0.85 -> -1)
+const rnd = x => Math.floor(x + 0.5 + 1e-9);
+const fmtH = h => h < 0 ? "+" + Math.abs(h) : String(h);
+const play85 = ch => rnd(ch * 0.85);
+function teamHcp(t, c){
+  const total = t.players.reduce((s,p) => s + play85(p.ch[c]), 0);
+  return {total, exact: total * 0.6, allow: rnd(total * 0.6)};
+}
+
+// ---- state ----
+const KEY = "pinehurst-shamble-v1";
+let scores = {}; // scores[c][teamId][playerIdx][hole] = gross
+try { scores = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ scores = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(scores)); } catch(e){} }
+function getS(c,t,p,h){ return scores?.[c]?.[t]?.[p]?.[h] ?? null; }
+function setS(c,t,p,h,v){
+  scores[c] ??= {}; scores[c][t] ??= {}; scores[c][t][p] ??= {};
+  if(v === null) delete scores[c][t][p][h]; else scores[c][t][p][h] = v;
+  save();
+}
+
+let course = 0, view = "board", teamSel = 0, hole = 0;
+
+// Best 3 on a hole: returns {total, idx:Set} or null if fewer than 3 scores
+function best3(c, t, h){
+  const vals = t.players.map((p,i) => ({i, v:getS(c,t.id,i,h)})).filter(x => x.v !== null);
+  if(vals.length < 3) return null;
+  vals.sort((a,b) => a.v - b.v || a.i - b.i);
+  const pick = vals.slice(0,3);
+  return {total: pick.reduce((s,x) => s + x.v, 0), idx: new Set(pick.map(x => x.i))};
+}
+function roundSummary(c, t){
+  let gross = 0, thru = 0;
+  for(let h=0; h<18; h++){ const b = best3(c,t,h); if(b){ gross += b.total; thru++; } }
+  const hc = teamHcp(t,c);
+  return {gross, thru, allow: hc.allow, net: thru === 18 ? gross - hc.allow : null};
+}
+
+// ---- views ----
+const el = id => document.getElementById(id);
+const tColor = t => `var(${t.color})`;
+
+function renderBoard(){
+  const rows = TEAMS.map(t => ({t, ...roundSummary(course,t)}));
+  rows.sort((a,b) => {
+    if(a.net !== null && b.net !== null) return a.net - b.net;
+    if(a.net !== null) return -1;
+    if(b.net !== null) return 1;
+    return b.thru - a.thru || a.gross - b.gross;
+  });
+  // positions with ties among finished teams
+  let pos = [];
+  rows.forEach((r,i) => {
+    if(r.net === null){ pos.push(""); return; }
+    const first = rows.findIndex(x => x.net === r.net);
+    const tied = rows.filter(x => x.net === r.net).length > 1;
+    pos.push((tied ? "T" : "") + (first + 1));
+  });
+  const anyDone = rows.some(r => r.net !== null);
+  el("v-board").innerHTML = `
+    <h2>${COURSES[course]} leaderboard</h2>
+    <p class="lede">Net score = best 3 gross on every hole, minus 3/5 of the team’s 85% handicap. A team posts a net score once all 18 holes are in.</p>
+    <div class="board" role="table" aria-label="Leaderboard">
+      <div class="board-row board-head" role="row"><div>Pos</div><div>Team</div><div>Gross</div><div>Hcp</div><div>Net</div></div>
+      ${rows.map((r,i) => `
+        <div class="board-row" role="row">
+          <div class="pos">${pos[i] || "–"}</div>
+          <div class="team-cell"><span class="swatch" style="background:${tColor(r.t)}"></span>
+            <div><div class="team-name">${r.t.name}</div><div class="thru">${r.thru === 18 ? "Finished" : r.thru === 0 ? "Not started" : "Thru " + r.thru}</div></div></div>
+          <div class="tile ${r.thru ? "" : "empty"}">${r.thru ? r.gross : "–"}</div>
+          <div class="tile">${r.allow}</div>
+          <div class="tile net ${r.net === null ? "empty" : ""}">${r.net === null ? "–" : r.net}</div>
+        </div>`).join("")}
+    </div>
+    ${anyDone ? "" : `<p class="board-note">No team has finished ${COURSES[course]} yet. Open Enter scores to start posting holes.</p>`}
+    <div class="totals">
+      <h2>All three rounds</h2>
+      <p class="lede">Net score by round. Each round crowns its own winner; the total is for reference.</p>
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>Team</th>${COURSES.map(c => `<th>${c}</th>`).join("")}<th>Total</th></tr></thead>
+        <tbody>${TEAMS.map(t => {
+          const nets = [0,1,2].map(c => roundSummary(c,t).net);
+          const done = nets.filter(n => n !== null);
+          return `<tr><td class="strong"><span class="swatch" style="display:inline-block;width:10px;height:10px;margin-right:6px;background:${tColor(t)}"></span>${t.name}</td>
+            ${nets.map(n => `<td>${n === null ? "–" : n}</td>`).join("")}
+            <td class="strong">${done.length ? done.reduce((a,b)=>a+b,0) + (done.length < 3 ? "*" : "") : "–"}</td></tr>`;
+        }).join("")}</tbody>
+      </table></div>
+      <p class="board-note">* Total covers finished rounds only.</p>
+    </div>`;
+}
+
+function renderEnter(){
+  const t = TEAMS[teamSel];
+  const b = best3(course,t,hole);
+  el("v-enter").innerHTML = `
+    <div class="team-pick" role="group" aria-label="Team">
+      ${TEAMS.map((x,i) => `<button style="--tc:${tColor(x)}" data-team="${i}" aria-pressed="${i===teamSel}">${x.name}</button>`).join("")}
+    </div>
+    <div class="hole-bar">
+      <button class="arrow" data-step="-1" aria-label="Previous hole" ${hole===0?"disabled":""}>‹</button>
+      <div class="hole-num" style="text-align:center">Hole ${hole+1}<small>${COURSES[course]}, Team ${t.name}</small></div>
+      <button class="arrow" data-step="1" aria-label="Next hole" ${hole===17?"disabled":""}>›</button>
+    </div>
+    <div class="holes-strip" aria-label="Jump to hole">
+      ${Array.from({length:18},(_,h) => `<button class="hs ${best3(course,t,h)?"done":""}" data-hole="${h}" aria-current="${h===hole}">${h+1}</button>`).join("")}
+    </div>
+    <div class="players">
+      ${t.players.map((p,i) => {
+        const v = getS(course,t.id,i,hole);
+        const isBest = b && b.idx.has(i);
+        return `<div class="prow">
+          <div><div class="pname">${p.n}</div><div class="pmeta">${p.tee} tees, playing hcp ${fmtH(play85(p.ch[course]))}</div></div>
+          <div class="stepper">
+            <button data-p="${i}" data-d="-1" aria-label="Lower ${p.n} score">−</button>
+            <div class="score ${v===null?"blank":""} ${isBest?"is-best":""}" aria-live="polite" aria-label="${p.n} score">${v===null?"–":v}</div>
+            <button data-p="${i}" data-d="1" aria-label="Raise ${p.n} score">+</button>
+          </div>
+        </div>`;
+      }).join("")}
+      <div class="hole-total"><span>Best 3 on hole ${hole+1}</span><strong>${b ? b.total : "–"}</strong></div>
+    </div>
+    <p class="hint">Highlighted scores count. Leave a player blank for a pickup — the hole counts once three scores are in. Scores save on this device.</p>
+    <button class="clear-btn" data-clear="1">Clear hole ${hole+1}</button>`;
+}
+
+function renderCard(){
+  el("v-card").innerHTML = `
+    <h2>${COURSES[course]} scorecards</h2>
+    <p class="lede">Highlighted cells are the three scores counting on each hole. Tap any hole number to edit it.</p>
+    ${TEAMS.map((t,ti) => {
+      const bs = Array.from({length:18},(_,h) => best3(course,t,h));
+      const sumRange = (a,z) => bs.slice(a,z).every(Boolean) ? bs.slice(a,z).reduce((s,x)=>s+x.total,0) : "–";
+      const rs = roundSummary(course,t);
+      return `<div class="card-team"><h3><i style="background:${tColor(t)}"></i>Team ${t.name}</h3>
+      <div class="scroll card"><table class="tbl">
+        <thead><tr><th>Player</th>${Array.from({length:18},(_,h)=>`<th class="${h===9?"out":""}"><button class="hs" style="border:0;background:none;padding:0" data-edit="${ti}:${h}">${h+1}</button></th>`).join("")}<th class="out">Out</th><th>In</th><th>Tot</th></tr></thead>
+        <tbody>
+          ${t.players.map((p,i) => {
+            const cells = Array.from({length:18},(_,h) => {
+              const v = getS(course,t.id,i,h);
+              return `<td class="${bs[h]&&bs[h].idx.has(i)?"b":""} ${h===9?"out":""}">${v===null?"":v}</td>`;
+            }).join("");
+            return `<tr><td>${p.n.split(" ").slice(-1)[0]}</td>${cells}<td class="out"></td><td></td><td></td></tr>`;
+          }).join("")}
+          <tr class="sum"><td>Best 3</td>${bs.map((b,h)=>`<td class="${h===9?"out":""}">${b?b.total:""}</td>`).join("")}<td class="out">${sumRange(0,9)}</td><td>${sumRange(9,18)}</td><td>${rs.thru===18?rs.gross:"–"}</td></tr>
+        </tbody>
+      </table></div>
+      <p class="card-foot">Gross ${rs.thru ? rs.gross + (rs.thru<18?` thru ${rs.thru}`:"") : "–"}, handicap ${rs.allow}, net ${rs.net===null?"–":rs.net}</p></div>`;
+    }).join("")}`;
+}
+
+function renderHcp(){
+  el("v-hcp").innerHTML = `
+    <h2>${COURSES[course]} handicaps</h2>
+    <div class="rules">
+      <p>Playing handicap = 85% of each player’s course handicap, rounded (.5 and up rounds up).</p>
+      <p>Team handicap = 3/5 of the five playing handicaps added together, rounded the same way.</p>
+    </div>
+    ${TEAMS.map(t => {
+      const hc = teamHcp(t,course);
+      return `<div class="hcp-team"><h3><i style="background:${tColor(t)}"></i>Team ${t.name}</h3>
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>Player</th><th>Tees</th><th>Course hcp</th><th>85%</th></tr></thead>
+        <tbody>
+          ${t.players.map(p => `<tr><td>${p.n}</td><td>${p.tee}</td><td>${fmtH(p.ch[course])}</td><td class="strong">${fmtH(play85(p.ch[course]))}</td></tr>`).join("")}
+          <tr><td class="strong">Team total</td><td></td><td></td><td class="strong">${hc.total}</td></tr>
+          <tr class="allow"><td>Team handicap (3/5)</td><td></td><td>${hc.exact.toFixed(1)}</td><td>${hc.allow}</td></tr>
+        </tbody>
+      </table></div></div>`;
+    }).join("")}`;
+}
+
+function render(){
+  document.querySelectorAll(".course-btn").forEach(b => b.setAttribute("aria-pressed", +b.dataset.c === course));
+  document.querySelectorAll(".view-btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === view));
+  ["board","enter","card","hcp"].forEach(v => el("v-"+v).hidden = v !== view);
+  ({board:renderBoard, enter:renderEnter, card:renderCard, hcp:renderHcp})[view]();
+}
+
+// ---- events ----
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.c !== undefined){ course = +b.dataset.c; render(); return; }
+  if(b.dataset.v){ view = b.dataset.v; render(); window.scrollTo(0,0); return; }
+  if(b.dataset.team !== undefined){ teamSel = +b.dataset.team; render(); return; }
+  if(b.dataset.step){ hole = Math.min(17, Math.max(0, hole + +b.dataset.step)); render(); return; }
+  if(b.dataset.hole !== undefined){ hole = +b.dataset.hole; render(); return; }
+  if(b.dataset.edit){ const [ti,h] = b.dataset.edit.split(":").map(Number); teamSel = ti; hole = h; view = "enter"; render(); window.scrollTo(0,0); return; }
+  if(b.dataset.clear){ TEAMS[teamSel].players.forEach((_,i) => setS(course,TEAMS[teamSel].id,i,hole,null)); render(); return; }
+  if(b.dataset.p !== undefined){
+    const t = TEAMS[teamSel], i = +b.dataset.p, d = +b.dataset.d;
+    const cur = getS(course,t.id,i,hole);
+    let next;
+    if(cur === null) next = d > 0 ? 4 : null;
+    else { next = cur + d; if(next < 1) next = null; if(next > 12) next = 12; }
+    setS(course,t.id,i,hole,next); render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

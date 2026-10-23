@@ -145,6 +145,10 @@ table{border-collapse:collapse;width:100%}
 .tbl tr.allow td{background:var(--pine);color:var(--pine-ink);font-weight:700}
 .rules{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--sand);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:14px}
 .rules p+p{margin-top:6px}
+.sync{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:999px}
+.sync i{width:8px;height:8px;border-radius:50%;background:#C9B37E}
+.sync.live i{background:#5BD08A}
+.sync.error i{background:#FF7A6E}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion: no-preference){.score{transition:background .15s,color .15s}}
 </style>
@@ -152,10 +156,11 @@ table{border-collapse:collapse;width:100%}
 <body>
 <header>
   <div class="title">Pinehurst Shamble<small>Four teams of five. Best 3 gross scores per hole, net of 3/5 team handicap.</small></div>
+  <div id="sync" class="sync" role="status"><i></i><span>Connecting…</span></div>
   <div class="courses" role="group" aria-label="Course">
-    <button class="course-btn" data-c="0" aria-pressed="true">No. 2<span>Round 1</span></button>
-    <button class="course-btn" data-c="1" aria-pressed="false">No. 4<span>Round 2</span></button>
-    <button class="course-btn" data-c="2" aria-pressed="false">No. 10<span>Round 3</span></button>
+    <button class="course-btn" data-c="0" aria-pressed="true">No. 2</button>
+    <button class="course-btn" data-c="1" aria-pressed="false">No. 4</button>
+    <button class="course-btn" data-c="2" aria-pressed="false">No. 10</button>
   </div>
 </header>
 <nav class="views" role="group" aria-label="View">
@@ -171,7 +176,14 @@ table{border-collapse:collapse;width:100%}
   <section id="v-hcp" hidden></section>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
+// ===== PASTE YOUR TWO SUPABASE VALUES HERE =====
+const SUPABASE_URL = "PASTE_PROJECT_URL_HERE";
+const SUPABASE_KEY = "PASTE_ANON_KEY_HERE";
+// ===============================================
+const TABLE = "pinehurst_scores";
+
 const COURSES = ["No. 2","No. 4","No. 10"];
 // Course handicaps per course [No.2, No.4, No.10]; plus handicaps entered as negatives
 const TEAMS = [
@@ -214,16 +226,76 @@ function teamHcp(t, c){
   return {total, exact: total * 0.6, allow: rnd(total * 0.6)};
 }
 
-// ---- state ----
-const KEY = "pinehurst-shamble-v1";
+// ---- state + live sync ----
+const LIVE = SUPABASE_URL.startsWith("https://") && !SUPABASE_KEY.startsWith("PASTE") && window.supabase;
+const KEY = LIVE ? "pinehurst-live-cache-v1" : "pinehurst-shamble-v1";
 let scores = {}; // scores[c][teamId][playerIdx][hole] = gross
 try { scores = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ scores = {}; }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(scores)); } catch(e){} }
 function getS(c,t,p,h){ return scores?.[c]?.[t]?.[p]?.[h] ?? null; }
-function setS(c,t,p,h,v){
+function applyLocal(c,t,p,h,v){
   scores[c] ??= {}; scores[c][t] ??= {}; scores[c][t][p] ??= {};
   if(v === null) delete scores[c][t][p][h]; else scores[c][t][p][h] = v;
   save();
+}
+const pending = {}; // writes waiting to send, keyed course|team|player|hole
+const pkey = (c,t,p,h) => [c,t,p,h].join("|");
+function setS(c,t,p,h,v){
+  applyLocal(c,t,p,h,v);
+  if(!LIVE) return;
+  const k = pkey(c,t,p,h);
+  if(pending[k]) clearTimeout(pending[k].timer);
+  pending[k] = {v, timer: setTimeout(() => pushScore(c,t,p,h,v,k), 350)};
+}
+let db = null;
+function setStatus(state){
+  const box = document.getElementById("sync");
+  const text = {live:"Live — syncing all phones", connecting:"Connecting…", error:"Offline — retrying", local:"Device only — keys not added"}[state];
+  box.className = "sync " + state;
+  box.querySelector("span").textContent = text;
+}
+async function pushScore(c,t,p,h,v,k){
+  try{
+    const row = {course:c, team:t, player:p, hole:h};
+    const {error} = v === null
+      ? await db.from(TABLE).delete().match(row)
+      : await db.from(TABLE).upsert({...row, gross:v, updated_at:new Date().toISOString()});
+    if(error) throw error;
+    if(pending[k] && pending[k].v === v) delete pending[k];
+    setStatus("live");
+  }catch(e){
+    setStatus("error");
+    pending[k].timer = setTimeout(() => pushScore(c,t,p,h,pending[k].v,k), 3000);
+  }
+}
+async function loadAll(){
+  const {data, error} = await db.from(TABLE).select("course,team,player,hole,gross");
+  if(error){ setStatus("error"); return; }
+  const keep = Object.entries(pending).map(([k,x]) => [k.split("|"), x.v]);
+  scores = {};
+  data.forEach(r => applyLocal(r.course, r.team, r.player, r.hole, r.gross));
+  keep.forEach(([[c,t,p,h], v]) => applyLocal(+c, t, +p, +h, v));
+  setStatus("live");
+  render();
+}
+function startSync(){
+  if(!LIVE){ setStatus("local"); return; }
+  setStatus("connecting");
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  db.channel("pinehurst-scores")
+    .on("postgres_changes", {event:"*", schema:"public", table:TABLE}, payload => {
+      const del = payload.eventType === "DELETE";
+      const r = del ? payload.old : payload.new;
+      if(pending[pkey(r.course, r.team, r.player, r.hole)]) return;
+      applyLocal(r.course, r.team, r.player, r.hole, del ? null : r.gross);
+      render();
+    })
+    .subscribe(status => {
+      if(status === "SUBSCRIBED") loadAll();
+      else if(["CHANNEL_ERROR","TIMED_OUT","CLOSED"].includes(status)) setStatus("error");
+    });
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") loadAll(); });
+  setInterval(() => { if(document.visibilityState === "visible") loadAll(); }, 30000);
 }
 
 let course = 0, view = "board", teamSel = 0, hole = 0;
@@ -327,7 +399,7 @@ function renderEnter(){
       }).join("")}
       <div class="hole-total"><span>Best 3 on hole ${hole+1}</span><strong>${b ? b.total : "–"}</strong></div>
     </div>
-    <p class="hint">Highlighted scores count. Leave a player blank for a pickup — the hole counts once three scores are in. Scores save on this device.</p>
+    <p class="hint">Highlighted scores count. Leave a player blank for a pickup — the hole counts once three scores are in. Scores sync to every phone when the header shows Live.</p>
     <button class="clear-btn" data-clear="1">Clear hole ${hole+1}</button>`;
 }
 
@@ -406,6 +478,7 @@ document.addEventListener("click", e => {
 });
 
 render();
+startSync();
 </script>
 </body>
 </html>
